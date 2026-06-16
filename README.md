@@ -11,6 +11,8 @@ CPU-only, zero-shot voice conversion. Takes a **content** audio clip (e.g. speec
 from a video) and a **target speaker** reference clip, and outputs the content speech restyled
 to sound like the target speaker. No GPU. No text/ASR. No alignment. No manual downloads.
 
+![VoiceTransfer Architecture](assets/architecture.png)
+
 ---
 
 ## Setup
