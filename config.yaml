@@ -1,0 +1,38 @@
+paths:
+  models_dir: "./models"          # cache dir for ALL downloaded weights (TORCH_HOME)
+  content_audio: "./input/content.wav"
+  target_refs:                    # one or more clips of the target voice
+    - "./input/target.wav"
+  output_audio: "./output/converted.wav"
+  input_video: ""                 # optional; if set and mux.enabled=true, remux onto this
+  output_video: "./output/converted.mp4"
+
+device:
+  type: "cpu"
+  num_threads: 4                  # torch.set_num_threads
+
+backend:
+  name: "knn_vc"                  # selects converters/<name>.py
+
+knn_vc:
+  prematched: true                # use prematched HiFiGAN (recommended for zero-shot)
+  topk: 4                         # k nearest neighbours for feature matching
+  wavlm_layer: 6                  # WavLM-Large transformer layer to use (0-23)
+
+audio:
+  output_sample_rate: 0           # 0 = match the content audio's native sample rate
+  normalize_loudness: true
+  target_lufs: -23.0              # EBU R128 broadcast target
+
+length:
+  enforce_exact: true             # pad/trim output to exact source sample count
+  pad_mode: "silence"             # only "silence" is supported right now
+  warn_if_drift_ms: 50            # log WARNING if pre-correction drift exceeds this
+
+mux:
+  enabled: false                  # set true to remux converted audio onto input_video
+  copy_video_codec: true          # -c:v copy — never re-encode the video stream
+  ffmpeg_path: "auto"             # "auto" uses imageio-ffmpeg's bundled binary
+
+logging:
+  level: "INFO"

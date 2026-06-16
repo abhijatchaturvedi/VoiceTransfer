@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Model weights (large binaries — download on demand)
+models/
+
+# Audio I/O scratch files
+input/
+output/
+
+# IDE / OS
+.vscode/
+.idea/
+*.DS_Store
+Thumbs.db
+
+# Streamlit
+.streamlit/
+
+# Pytest
+.pytest_cache/

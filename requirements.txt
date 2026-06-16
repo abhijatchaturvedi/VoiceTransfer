@@ -1,0 +1,25 @@
+# ── CPU-only PyTorch ──────────────────────────────────────────────────────────
+# pip install -r requirements.txt
+# The line below pulls CPU-only wheels; no CUDA packages will be installed.
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+torch==2.3.1+cpu
+torchaudio==2.3.1+cpu
+
+# ── Audio processing ──────────────────────────────────────────────────────────
+numpy>=1.24.0,<2.1
+librosa>=0.10.0
+soundfile>=0.12.1
+pyloudnorm>=0.1.1
+
+# ── Video muxing (bundled ffmpeg, no system install required) ─────────────────
+imageio-ffmpeg>=0.4.9
+
+# ── Config ────────────────────────────────────────────────────────────────────
+PyYAML>=6.0
+
+# ── Streamlit UI ─────────────────────────────────────────────────────────────
+streamlit>=1.35.0
+
+# ── Progress + utilities ──────────────────────────────────────────────────────
+tqdm>=4.65.0
