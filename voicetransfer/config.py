@@ -42,6 +42,19 @@ class KnnVcConfig:
 
 
 @dataclass
+class PitchConfig:
+    enabled: bool = True
+    max_shift_semitones: float = 12.0   # cap to avoid extreme phase-vocoder artifacts
+
+
+@dataclass
+class BandwidthConfig:
+    enabled: bool = True
+    cutoff_hz: float = 7500.0   # high-pass cutoff for HF blending
+    blend_gain: float = 0.8     # mix level for blended HF (0=off, 1=full)
+
+
+@dataclass
 class AudioConfig:
     output_sample_rate: int = 0
     normalize_loudness: bool = True
@@ -73,6 +86,8 @@ class AppConfig:
     device: DeviceConfig = field(default_factory=DeviceConfig)
     backend: BackendConfig = field(default_factory=BackendConfig)
     knn_vc: KnnVcConfig = field(default_factory=KnnVcConfig)
+    pitch: PitchConfig = field(default_factory=PitchConfig)
+    bandwidth: BandwidthConfig = field(default_factory=BandwidthConfig)
     audio: AudioConfig = field(default_factory=AudioConfig)
     length: LengthConfig = field(default_factory=LengthConfig)
     mux: MuxConfig = field(default_factory=MuxConfig)
@@ -86,14 +101,16 @@ def _g(d: dict, key: str, default):
 
 def _parse_raw(raw: dict) -> AppConfig:
     """Convert a raw YAML dict into AppConfig, applying defaults for missing keys."""
-    p  = raw.get("paths",   {})
-    dv = raw.get("device",  {})
-    b  = raw.get("backend", {})
-    k  = raw.get("knn_vc",  {})
-    a  = raw.get("audio",   {})
-    le = raw.get("length",  {})
-    m  = raw.get("mux",     {})
-    lg = raw.get("logging", {})
+    p  = raw.get("paths",     {})
+    dv = raw.get("device",    {})
+    b  = raw.get("backend",   {})
+    k  = raw.get("knn_vc",    {})
+    pt = raw.get("pitch",     {})
+    bw = raw.get("bandwidth", {})
+    a  = raw.get("audio",     {})
+    le = raw.get("length",    {})
+    m  = raw.get("mux",       {})
+    lg = raw.get("logging",   {})
 
     return AppConfig(
         paths=PathsConfig(
@@ -114,6 +131,15 @@ def _parse_raw(raw: dict) -> AppConfig:
             topk=_g(k, "topk", 4),
             wavlm_layer=_g(k, "wavlm_layer", 6),
             target_vad_level=_g(k, "target_vad_level", 0),
+        ),
+        pitch=PitchConfig(
+            enabled=_g(pt, "enabled", True),
+            max_shift_semitones=float(_g(pt, "max_shift_semitones", 12.0)),
+        ),
+        bandwidth=BandwidthConfig(
+            enabled=_g(bw, "enabled", True),
+            cutoff_hz=float(_g(bw, "cutoff_hz", 7500.0)),
+            blend_gain=float(_g(bw, "blend_gain", 0.8)),
         ),
         audio=AudioConfig(
             output_sample_rate=_g(a, "output_sample_rate", 0),

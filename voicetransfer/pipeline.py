@@ -192,6 +192,18 @@ def run_pipeline(config: "AppConfig", model) -> PipelineStats:
         content_model = resample(content_wav, native_sr, model_sr)
         target_model = [resample(wav, sr, model_sr) for wav, sr in target_pairs]
 
+    # ── Step 3b: Pitch alignment ─────────────────────────────────────────────
+    with _Timer(stats, "Pitch align (F0 analysis + shift)"):
+        if config.pitch.enabled:
+            from voicetransfer.pitch import apply_shift, compute_shift, estimate_median_f0
+            target_concat = np.concatenate(target_model)
+            content_f0 = estimate_median_f0(content_model, model_sr)
+            target_f0 = estimate_median_f0(target_concat, model_sr)
+            logger.info("F0: content=%.1f Hz  target=%.1f Hz", content_f0, target_f0)
+            n_steps = compute_shift(content_f0, target_f0, config.pitch.max_shift_semitones)
+            logger.info("Pitch shift: %.2f semitones", n_steps)
+            content_model = apply_shift(content_model, model_sr, n_steps)
+
     # ── Step 4: Convert ──────────────────────────────────────────────────────
     with _Timer(stats, "Voice conversion (WavLM + kNN + HiFiGAN)"):
         logger.info("Running backend '%s'...", config.backend.name)
@@ -210,6 +222,21 @@ def run_pipeline(config: "AppConfig", model) -> PipelineStats:
             else native_sr
         )
         out_wav = resample(out_model_wav, model_sr, out_sr)
+
+    # ── Step 5b: Bandwidth extension ─────────────────────────────────────────
+    with _Timer(stats, "Bandwidth extension (HF blend)"):
+        if config.bandwidth.enabled:
+            from voicetransfer.bandwidth import blend_hf
+            content_at_out = (
+                resample(content_wav, native_sr, out_sr)
+                if out_sr != native_sr
+                else content_wav
+            )
+            out_wav = blend_hf(
+                out_wav, content_at_out, out_sr,
+                cutoff_hz=config.bandwidth.cutoff_hz,
+                gain=config.bandwidth.blend_gain,
+            )
 
     # ── Step 6: Length alignment ─────────────────────────────────────────────
     with _Timer(stats, "Length align"):

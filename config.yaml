@@ -23,6 +23,15 @@ knn_vc:
                                   # 3 = recommended: removes silence, keeps all voiced speech
                                   # 7 = aggressive, only use for very noisy references
 
+pitch:
+  enabled: true                   # shift content F0 to match target speaker's median pitch
+  max_shift_semitones: 12.0       # cap — shifts beyond this are likely wrong F0 estimates
+
+bandwidth:
+  enabled: true                   # blend >7.5 kHz from original content back into output
+  cutoff_hz: 7500.0               # high-pass cutoff for HF extraction
+  blend_gain: 0.8                 # 0.0 = off; 1.0 = full original HF level
+
 audio:
   output_sample_rate: 0           # 0 = match the content audio's native sample rate
   normalize_loudness: true

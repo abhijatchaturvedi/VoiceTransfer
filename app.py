@@ -83,6 +83,11 @@ def _build_config(
     topk: int,
     wavlm_layer: int,
     target_vad_level: int,
+    pitch_enabled: bool,
+    pitch_max_shift_semitones: float,
+    bandwidth_enabled: bool,
+    bandwidth_cutoff_hz: float,
+    bandwidth_blend_gain: float,
     normalize_loudness: bool,
     target_lufs: float,
     output_sample_rate: int,
@@ -90,8 +95,8 @@ def _build_config(
 ):
     """Build an AppConfig from UI values — same dataclass used by the CLI."""
     from voicetransfer.config import (
-        AppConfig, AudioConfig, BackendConfig, DeviceConfig,
-        KnnVcConfig, LengthConfig, LoggingConfig, MuxConfig, PathsConfig,
+        AppConfig, AudioConfig, BackendConfig, BandwidthConfig, DeviceConfig,
+        KnnVcConfig, LengthConfig, LoggingConfig, MuxConfig, PathsConfig, PitchConfig,
     )
     return AppConfig(
         paths=PathsConfig(
@@ -105,6 +110,15 @@ def _build_config(
         knn_vc=KnnVcConfig(
             prematched=prematched, topk=topk, wavlm_layer=wavlm_layer,
             target_vad_level=target_vad_level,
+        ),
+        pitch=PitchConfig(
+            enabled=pitch_enabled,
+            max_shift_semitones=pitch_max_shift_semitones,
+        ),
+        bandwidth=BandwidthConfig(
+            enabled=bandwidth_enabled,
+            cutoff_hz=bandwidth_cutoff_hz,
+            blend_gain=bandwidth_blend_gain,
         ),
         audio=AudioConfig(
             output_sample_rate=output_sample_rate,
@@ -158,6 +172,44 @@ def _sidebar() -> dict:
                  "7 = aggressive (only for very noisy references).",
         )
 
+        st.subheader("🎵 Pitch alignment")
+        pitch_enabled = st.checkbox(
+            "Auto pitch shift",
+            value=True,
+            help="Estimate median F0 of content and target, then shift content pitch "
+                 "to match before kNN conversion.  Critical when speakers differ in "
+                 "gender or natural pitch range.",
+        )
+        pitch_max_shift_semitones = st.slider(
+            "Max shift (semitones)",
+            min_value=1.0, max_value=24.0, value=12.0, step=0.5,
+            disabled=not pitch_enabled,
+            help="Clamp the computed shift to this range.  ±12 st = ±1 octave. "
+                 "Larger values risk phase-vocoder artifacts.",
+        )
+
+        st.subheader("📡 Bandwidth extension")
+        bandwidth_enabled = st.checkbox(
+            "Blend high frequencies",
+            value=True,
+            help="kNN-VC/HiFiGAN is band-limited to 8 kHz.  This blends the "
+                 ">7.5 kHz content from the original audio back in, restoring "
+                 "sibilance and air.  Only active when output SR > 16 kHz.",
+        )
+        bandwidth_blend_gain = st.slider(
+            "HF blend gain",
+            min_value=0.0, max_value=1.0, value=0.8, step=0.05,
+            disabled=not bandwidth_enabled,
+            help="How much of the high-frequency content to mix in. "
+                 "0 = off, 1 = full level of original HF.",
+        )
+        bandwidth_cutoff_hz = st.number_input(
+            "HF cutoff (Hz)",
+            min_value=4000, max_value=12000, value=7500, step=500,
+            disabled=not bandwidth_enabled,
+            help="Frequencies above this are taken from the original content audio.",
+        )
+
         st.subheader("Audio output")
         normalize_loudness = st.checkbox(
             "Normalize loudness (EBU R128)",
@@ -190,6 +242,11 @@ def _sidebar() -> dict:
         topk=topk,
         wavlm_layer=wavlm_layer,
         target_vad_level=int(target_vad_level),
+        pitch_enabled=pitch_enabled,
+        pitch_max_shift_semitones=float(pitch_max_shift_semitones),
+        bandwidth_enabled=bandwidth_enabled,
+        bandwidth_cutoff_hz=float(bandwidth_cutoff_hz),
+        bandwidth_blend_gain=float(bandwidth_blend_gain),
         normalize_loudness=normalize_loudness,
         target_lufs=float(target_lufs),
         output_sample_rate=int(output_sample_rate),
