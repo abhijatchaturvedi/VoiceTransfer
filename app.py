@@ -151,10 +151,11 @@ def _sidebar() -> dict:
         )
         target_vad_level = st.slider(
             "Target VAD aggressiveness",
-            min_value=0, max_value=7, value=0,
-            help="Voice activity detection on the target reference. "
-                 "0 = keep all frames (recommended for short clips); "
-                 "7 = aggressively strip silence.",
+            min_value=0, max_value=7, value=3,
+            help="Strips silence from the target reference before building the kNN pool. "
+                 "0 = keep all frames (risks matching speech to silence frames); "
+                 "3 = recommended (removes silence, keeps all voiced speech); "
+                 "7 = aggressive (only for very noisy references).",
         )
 
         st.subheader("Audio output")

@@ -38,7 +38,7 @@ class KnnVcConfig:
     prematched: bool = True
     topk: int = 4
     wavlm_layer: int = 6
-    target_vad_level: int = 0   # 0 = keep all frames; 7 = aggressive silence removal
+    target_vad_level: int = 3   # 0 = keep all; 3 = strip silence; 7 = aggressive
 
 
 @dataclass

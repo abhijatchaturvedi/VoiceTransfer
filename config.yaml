@@ -18,7 +18,10 @@ knn_vc:
   prematched: true                # use prematched HiFiGAN (recommended for zero-shot)
   topk: 4                         # k nearest neighbours for feature matching
   wavlm_layer: 6                  # WavLM-Large transformer layer to use (0-23)
-  target_vad_level: 0             # VAD aggressiveness on target (0=off, 7=max); keep 0 for short clips
+  target_vad_level: 3             # VAD aggressiveness on target reference (0=off, 3=strip silence, 7=max)
+                                  # 0 = keep every frame (risks matching silence to speech)
+                                  # 3 = recommended: removes silence, keeps all voiced speech
+                                  # 7 = aggressive, only use for very noisy references
 
 audio:
   output_sample_rate: 0           # 0 = match the content audio's native sample rate
