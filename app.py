@@ -300,7 +300,7 @@ def main() -> None:
                     **settings,
                 )
                 from voicetransfer.pipeline import run_pipeline
-                run_pipeline(cfg, model)
+                stats = run_pipeline(cfg, model)
 
                 status.update(label="✅ Conversion complete!", state="complete")
 
@@ -327,6 +327,25 @@ def main() -> None:
                     mime="audio/wav",
                     use_container_width=True,
                 )
+
+            # ── Performance stats ──────────────────────────────────────────────
+            st.subheader("📊 Performance")
+            m1, m2, m3, m4 = st.columns(4)
+            m1.metric("Total time",      f"{stats.total_s:.1f} s")
+            m2.metric("Realtime factor", f"{stats.realtime_factor:.1f}×",
+                      help="Seconds of compute per second of audio. Lower is faster.")
+            m3.metric("Peak RAM",        f"{stats.peak_ram_mb:.0f} MB",
+                      delta=f"+{stats.net_ram_mb:.0f} MB vs baseline",
+                      delta_color="off")
+            m4.metric("Output size",     f"{stats.output_size_mb:.1f} MB")
+
+            with st.expander("Step-by-step breakdown"):
+                step_data = {
+                    "Step": [s.name for s in stats.steps],
+                    "Time (s)": [f"{s.duration_s:.2f}" for s in stats.steps],
+                    "RAM at end (MB)": [f"{s.ram_mb:.0f}" for s in stats.steps],
+                }
+                st.table(step_data)
 
         except Exception as exc:
             st.error(f"**Conversion failed:** {exc}")
