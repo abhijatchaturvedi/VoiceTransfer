@@ -91,6 +91,7 @@ def _build_converter(config: "AppConfig", model) -> BaseConverter:
             model=model,
             topk=config.knn_vc.topk,
             wavlm_layer=config.knn_vc.wavlm_layer,
+            target_vad_level=config.knn_vc.target_vad_level,
         )
     raise ValueError(
         f"Unknown backend '{name}'. "

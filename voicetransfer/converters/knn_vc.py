@@ -30,9 +30,16 @@ _MODEL_SR = 16_000   # WavLM-Large / HiFiGAN operate at 16 kHz
 class KnnVcConverter(BaseConverter):
     """kNN voice conversion: zero-shot, training-free, frame-synchronous."""
 
-    def __init__(self, model, topk: int = 4, wavlm_layer: int = 6) -> None:
+    def __init__(
+        self,
+        model,
+        topk: int = 4,
+        wavlm_layer: int = 6,
+        target_vad_level: int = 0,
+    ) -> None:
         self._model = model
         self._topk = topk
+        self._target_vad_level = target_vad_level
         if wavlm_layer != 6:
             logger.warning(
                 "wavlm_layer=%d requested but layer selection via tensor input is not "
@@ -62,9 +69,13 @@ class KnnVcConverter(BaseConverter):
         query_seq = self._model.get_features(content_wav)
 
         logger.info(
-            "Building target matching set from %d reference clip(s)...", len(target_refs)
+            "Building target matching set from %d reference clip(s) "
+            "(vad_trigger_level=%d)...",
+            len(target_refs), self._target_vad_level,
         )
-        matching_set = self._model.get_matching_set(target_refs)
+        matching_set = self._model.get_matching_set(
+            target_refs, vad_trigger_level=self._target_vad_level
+        )
 
         logger.info(
             "kNN match: query=%s  matching_set=%s  topk=%d",

@@ -38,6 +38,7 @@ class KnnVcConfig:
     prematched: bool = True
     topk: int = 4
     wavlm_layer: int = 6
+    target_vad_level: int = 0   # 0 = keep all frames; 7 = aggressive silence removal
 
 
 @dataclass
@@ -112,6 +113,7 @@ def _parse_raw(raw: dict) -> AppConfig:
             prematched=_g(k, "prematched", True),
             topk=_g(k, "topk", 4),
             wavlm_layer=_g(k, "wavlm_layer", 6),
+            target_vad_level=_g(k, "target_vad_level", 0),
         ),
         audio=AudioConfig(
             output_sample_rate=_g(a, "output_sample_rate", 0),

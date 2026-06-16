@@ -82,6 +82,7 @@ def _build_config(
     prematched: bool,
     topk: int,
     wavlm_layer: int,
+    target_vad_level: int,
     normalize_loudness: bool,
     target_lufs: float,
     output_sample_rate: int,
@@ -101,7 +102,10 @@ def _build_config(
         ),
         device=DeviceConfig(type="cpu", num_threads=num_threads),
         backend=BackendConfig(name="knn_vc"),
-        knn_vc=KnnVcConfig(prematched=prematched, topk=topk, wavlm_layer=wavlm_layer),
+        knn_vc=KnnVcConfig(
+            prematched=prematched, topk=topk, wavlm_layer=wavlm_layer,
+            target_vad_level=target_vad_level,
+        ),
         audio=AudioConfig(
             output_sample_rate=output_sample_rate,
             normalize_loudness=normalize_loudness,
@@ -136,13 +140,21 @@ def _sidebar() -> dict:
         topk = st.slider(
             "Top-k neighbours",
             min_value=1, max_value=16, value=4,
-            help="Higher k → smoother pitch, slower inference. Default 4 is a good balance.",
+            help="Higher k → smoother pitch, slower inference. "
+                 "Increase to 8-16 when target reference is short (<30 s).",
         )
         wavlm_layer = st.slider(
             "WavLM layer",
             min_value=0, max_value=23, value=6,
             help="WavLM-Large transformer layer used for speaker features. "
                  "Layer 6 generalises well; layers closer to 24 are more semantic.",
+        )
+        target_vad_level = st.slider(
+            "Target VAD aggressiveness",
+            min_value=0, max_value=7, value=0,
+            help="Voice activity detection on the target reference. "
+                 "0 = keep all frames (recommended for short clips); "
+                 "7 = aggressively strip silence.",
         )
 
         st.subheader("Audio output")
@@ -176,6 +188,7 @@ def _sidebar() -> dict:
         prematched=prematched,
         topk=topk,
         wavlm_layer=wavlm_layer,
+        target_vad_level=int(target_vad_level),
         normalize_loudness=normalize_loudness,
         target_lufs=float(target_lufs),
         output_sample_rate=int(output_sample_rate),
