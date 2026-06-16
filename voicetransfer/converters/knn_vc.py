@@ -44,7 +44,7 @@ class KnnVcConverter(BaseConverter):
                 layer_idx,
             )
             return None
-        weights = torch.zeros(_WAVLM_LAYERS)
+        weights = torch.zeros(_WAVLM_LAYERS, dtype=torch.float64)  # model uses Double internally
         weights[layer_idx + 1] = 1.0   # +1 to skip the CNN extractor slot
         return weights
 

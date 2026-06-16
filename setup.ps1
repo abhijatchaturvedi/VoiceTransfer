@@ -19,23 +19,12 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-# ── Colour helpers ─────────────────────────────────────────────────────────────
+function Write-Step([string]$msg) { Write-Host "`n==> $msg" -ForegroundColor Cyan }
+function Write-Skip([string]$msg) { Write-Host "    [skip] $msg" -ForegroundColor DarkGray }
+function Write-Done([string]$msg) { Write-Host "    [done] $msg" -ForegroundColor Green }
+function Write-Fail([string]$msg) { Write-Host "    [fail] $msg" -ForegroundColor Red; exit 1 }
 
-function Write-Step([string]$msg) {
-    Write-Host "`n==> $msg" -ForegroundColor Cyan
-}
-function Write-Skip([string]$msg) {
-    Write-Host "    [skip] $msg" -ForegroundColor DarkGray
-}
-function Write-Done([string]$msg) {
-    Write-Host "    [done] $msg" -ForegroundColor Green
-}
-function Write-Fail([string]$msg) {
-    Write-Host "    [fail] $msg" -ForegroundColor Red
-    exit 1
-}
-
-# ── 1. Check uv is installed ───────────────────────────────────────────────────
+# ── 1. Check uv ───────────────────────────────────────────────────────────────
 
 Write-Step "Checking for uv..."
 if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
@@ -44,7 +33,7 @@ if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
     Write-Host "    pip install uv"
     Write-Host "    winget install astral-sh.uv"
     Write-Host "    powershell -c `"irm https://astral.sh/uv/install.ps1 | iex`""
-    Write-Fail "uv not found — aborting."
+    Write-Fail "uv not found -- aborting."
 }
 $uvVer = (uv --version 2>&1)
 Write-Done "Found: $uvVer"
@@ -53,7 +42,7 @@ Write-Done "Found: $uvVer"
 
 Write-Step "Virtual environment..."
 if (Test-Path ".venv") {
-    Write-Skip ".venv already exists — skipping creation."
+    Write-Skip ".venv already exists -- skipping creation."
 } else {
     Write-Host "    Creating .venv with uv..." -ForegroundColor White
     uv venv .venv
@@ -73,15 +62,13 @@ Write-Done "Active: $env:VIRTUAL_ENV"
 # ── 4. Install requirements ────────────────────────────────────────────────────
 
 Write-Step "Installing requirements..."
-
-# Check whether PyTorch is already importable in this venv.
 $torchVer = & python -c "import torch; print(torch.__version__)" 2>$null
 if ($LASTEXITCODE -eq 0 -and $torchVer) {
-    Write-Skip "PyTorch $torchVer already installed — skipping."
+    Write-Skip "PyTorch $torchVer already installed -- skipping."
     Write-Host "    (To force reinstall: uv pip install -r requirements.txt)" -ForegroundColor DarkGray
 } else {
     Write-Host "    Running: uv pip install -r requirements.txt" -ForegroundColor White
-    Write-Host "    (First run fetches CPU-only torch wheels — may take a few minutes)" -ForegroundColor DarkGray
+    Write-Host "    (First run fetches CPU-only torch wheels -- may take a few minutes)" -ForegroundColor DarkGray
     uv pip install -r requirements.txt
     Write-Done "Requirements installed."
 }
@@ -91,14 +78,14 @@ if ($LASTEXITCODE -eq 0 -and $torchVer) {
 Write-Step "Model weights..."
 $sentinel = ".\models\hub\checkpoints\wavlm_large_finetune.pt"
 if (Test-Path $sentinel) {
-    Write-Skip "Weights already present at $sentinel — skipping download."
+    Write-Skip "Weights already present at $sentinel -- skipping download."
 } else {
     Write-Host "    Running download_models.py (~650 MB on first run)..." -ForegroundColor White
     python download_models.py
     Write-Done "Weights downloaded and cached."
 }
 
-# ── Summary ────────────────────────────────────────────────────────────────────
+# ── Summary ───────────────────────────────────────────────────────────────────
 
 $line = "-" * 54
 Write-Host "`n$line" -ForegroundColor Cyan
