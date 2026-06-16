@@ -17,10 +17,10 @@ to sound like the target speaker. No GPU. No text/ASR. No alignment. No manual d
 
 ## Setup
 
-Both scripts are **idempotent** — safe to re-run. Each step prints `[skip]` if it
+All three scripts are **idempotent** — safe to re-run. Each step prints `[skip]` if it
 detects that the work is already done (`.venv` exists, PyTorch importable, weights cached).
 
-Both use **[uv](https://github.com/astral-sh/uv)** for fast dependency installation.
+All use **[uv](https://github.com/astral-sh/uv)** for fast dependency installation.
 Install uv first if you don't have it:
 
 ```bash
@@ -29,7 +29,13 @@ pip install uv
 # or (macOS/Linux): curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-### Windows (PowerShell)
+### Windows — Command Prompt
+
+```bat
+setup.bat
+```
+
+### Windows — PowerShell
 
 ```powershell
 # If script execution is blocked, run once in an elevated prompt:
@@ -38,16 +44,7 @@ pip install uv
 powershell -ExecutionPolicy Bypass -File setup.ps1
 ```
 
-`setup.ps1` does, in order (skipping completed steps):
-
-| Step | Command used |
-|------|-------------|
-| Create `.venv` | `uv venv .venv` |
-| Activate | `. .\.venv\Scripts\Activate.ps1` |
-| Install requirements | `uv pip install -r requirements.txt` |
-| Download model weights | `python download_models.py` |
-
-### macOS / Linux (Bash)
+### macOS / Linux — Bash
 
 ```bash
 bash setup.sh
@@ -55,7 +52,14 @@ bash setup.sh
 ./setup.sh
 ```
 
-`setup.sh` does the same four steps using `source .venv/bin/activate`.
+All three scripts perform the same four steps in order:
+
+| Step | Skipped when |
+|------|-------------|
+| `uv venv .venv` | `.venv/` folder already exists |
+| Activate venv | — (always runs to set session PATH) |
+| `uv pip install -r requirements.txt` | `import torch` succeeds in the venv |
+| `python download_models.py` | `models/hub/checkpoints/wavlm_large_finetune.pt` exists |
 
 ---
 
@@ -68,8 +72,9 @@ bash setup.sh
 uv venv .venv
 
 # 2. Activate (skip if prompt already shows (.venv))
-source .venv/bin/activate          # macOS / Linux
-.\.venv\Scripts\Activate.ps1      # Windows PowerShell
+source .venv/bin/activate           # macOS / Linux
+.\.venv\Scripts\Activate.ps1       # Windows PowerShell
+.venv\Scripts\activate.bat         # Windows Command Prompt
 
 # 3. Install requirements (skip if PyTorch already importable)
 uv pip install -r requirements.txt
